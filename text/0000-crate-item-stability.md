@@ -30,7 +30,8 @@ stability are detailed below.
 ## Stability Attributes
 [stability-attributes]: #stability-attributes
 
-A publically-visible item can be marked with one of the *stability attributes*, listed below.
+A publically-visible item can be marked with one or more of the *stability attributes*, listed
+below.
 
 * An `#[unstable]` item is unstable, and may change in future versions of the crate to which the
   item belongs.
@@ -40,27 +41,29 @@ A publically-visible item can be marked with one of the *stability attributes*, 
   attribute. A `#[deprecated]` item is unstable, and expected to be removed in a future version
   of the crate to which the item belongs.
 
-It is an error for an item to be marked with more than one stability attribute.
-
-`#[unstable]` and `#[stable]` each have the following fields, all of which are optional:
+Each of the stability attributes has the following fields:
 
 * `since` is a semver-compliant version number, representing the version of the crate at the time
-  the item was marked with the given attribute.
+  the item was marked with the given attribute. This field is required, but for now if the item
+  is marked with exactly one stability attribute, the compiler shall instead emit a warning if
+  this field is absent; a future RFC shall promote this to a hard error. It is an error for
+  two or more of an item's stability attributes to have identical values for this field.
 * `note` is a human-readable string briefly summarizing why the item is marked with the given
-  attribute. Even though it is currently optional, authors are strongly encouraged to use it. For
-  now, it shall be interpreted as plain unformatted text so that `rustdoc` can include it without
+  attribute. This field is optional, but authors are strongly encouraged to use it. For now, it
+  shall be interpreted as plain unformatted text so that `rustdoc` can include it without
   breaking any formatting.
 
 ## Item Stability Rules
 [item-stability-rules]: #item-stability-rules
 
-An item is *stable* if either of the following is true:
+The stability of an item is determined by following the steps below:
 
-* It belongs to an unstable crate and is marked with `#[stable]`.
-* It belongs to a stable crate and is not marked with any stability attribute, other than
-  `#[stable]`.
-
-Otherwise, it is *unstable*.
+1. If the item is marked with one or more stability attributes, sort the stability attributes
+   from earliest version to latest version. If the latest stability attribute is a `#[stable]`
+   attribute, the item is stable. If the latest stability attribute is any other stability
+   attribute, the item is unstable. If the item is not marked with any stability attributes,
+   proceed to the next step.
+2. If the item belongs to a stable crate, it is stable. Otherwise, the item is unstable.
 
 In the event that an unstable item is used, the compiler shall obey the following rules:
 
@@ -72,13 +75,13 @@ In the event that an unstable item is used, the compiler shall obey the followin
 ## Crate Stability Rules
 [crate-stability-rules]: #crate-stability-rules
 
-A crate is *stable* if it meets both of the following requirements:
+A crate is stable if it meets both of the following requirements:
 
 * Its version is >= `1.0.0` (a stable release per semver).
 * It contains either no publically-visible items, or at least one publically-visible stable
   item.
 
-Otherwise, it is *unstable*. It is an error for a crate to obey the first requirement but not
+Otherwise, it is unstable. It is an error for a crate to obey the first requirement but not
 the second.
 
 In the event that an unstable crate is used, the compiler shall not emit a warning unless the
@@ -89,6 +92,7 @@ per the above requirements, and any such change would be a significant breaking 
 # Drawbacks
 [drawbacks]: #drawbacks
 
+* This is a breaking change because the `since` field of `#[deprecated]` is now required.
 * Once this feature is public, its design is forever set in stone.
 
 # Alternatives
