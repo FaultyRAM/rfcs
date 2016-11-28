@@ -36,7 +36,8 @@ A publically-visible item can be marked with one of the *stability attributes*, 
 * A `#[stable]` item is stable, and not expected to change before the next major version of the
   crate to which the item belongs.
 * A `#[reserved]` item is unstable, and reserved for future usage. Unlike the other stability
-  attributes, `#[reserved]` is only valid on struct members, constants, and static variables.
+  attributes, `#[reserved]` is only valid on enum/struct members, constants, and static
+  variables.
 * Additionally, [`#[deprecated]`][RFC 1270] shall henceforth be recognised as a stability
   attribute. A `#[deprecated]` item is unstable, and expected to be removed in a future version
   of the crate to which the item belongs.
