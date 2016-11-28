@@ -22,7 +22,8 @@ controlling stability.
 # Detailed design
 [design]: #detailed-design
 
-Crates and items have a property called *stability*, which is either *stable* or *unstable*. The
+Crates and items have a property called *stability*. The stability of a crate is either *stable*
+or *unstable*. The stability of an item is either *stable*, *unstable* or *unspecified*. The
 stability of items is controlled via the stability attributes (described below), while the
 stability of crates is based on a number of factors. The attributes and rules that govern
 stability are detailed below.
@@ -43,10 +44,10 @@ below.
 
 Each of the stability attributes has the following fields:
 
-* `since` is a semver-compliant version number, representing the version of the crate at the time
-  the item was marked with the given attribute. This field is required, but for now if the item
-  is marked with exactly one stability attribute, the compiler shall instead emit a warning if
-  this field is absent; a future RFC shall promote this to a hard error. It is an error for
+* `since` is a semver-compliant version number, representing the version of the crate at the
+  time the item was marked with the given attribute. This field is required, but for now if the
+  item is marked with exactly one stability attribute, the compiler shall instead emit a warning
+  if this field is absent; a future RFC shall promote this to a hard error. It is an error for
   two or more of an item's stability attributes to have identical values for this field.
 * `note` is a human-readable string briefly summarizing why the item is marked with the given
   attribute. This field is optional, but authors are strongly encouraged to use it. For now, it
@@ -58,12 +59,10 @@ Each of the stability attributes has the following fields:
 
 The stability of an item is determined by following the steps below:
 
-1. If the item is marked with one or more stability attributes, sort the stability attributes
-   from earliest version to latest version. If the latest stability attribute is a `#[stable]`
-   attribute, the item is stable. If the latest stability attribute is any other stability
-   attribute, the item is unstable. If the item is not marked with any stability attributes,
-   proceed to the next step.
-2. If the item belongs to a stable crate, it is stable. Otherwise, the item is unstable.
+1. Sort the item's stability attributes from earliest version to latest version.
+2. If the latest stability attribute is a `#[stable]` attribute, the item is stable.
+3. If the latest stability attribute is any other stability attribute, the item is unstable.
+4. Otherwise, the item is unspecified.
 
 In the event that an unstable item is used, the compiler shall obey the following rules:
 
@@ -72,6 +71,15 @@ In the event that an unstable item is used, the compiler shall obey the followin
   the compiler do so in such situations. (A future RFC may alter this behavior so that a warning
   is issued regardless of a crate's stability).
 
+In the event that an unspecified item is used, the compiler shall obey the following rules:
+
+* If the item belongs to a stable crate, do not emit a warning. (Currently such items are
+  considered stable by library users, so it is inapproriate to consider their usage as
+  problematic.)
+* If the item belongs to an unstable crate, do not emit a warning unless the user requests that
+  the compiler do so in such situations. (A future RFC may alter this behavior so that a warning
+  is always issued in this situation).
+
 ## Crate Stability Rules
 [crate-stability-rules]: #crate-stability-rules
 
@@ -79,10 +87,11 @@ A crate is stable if it meets both of the following requirements:
 
 * Its version is >= `1.0.0` (a stable release per semver).
 * It contains either no publically-visible items, or at least one publically-visible stable
-  item.
+  item. It is an error for a >= `1.0.0` crate to not obey this requirement, but for now the
+  compiler shall only emit a warning when compiling such a crate; a future RFC shall promote
+  this to a hard error.
 
-Otherwise, it is unstable. It is an error for a crate to obey the first requirement but not
-the second.
+Otherwise, it is unstable.
 
 In the event that an unstable crate is used, the compiler shall not emit a warning unless the
 user requests that the compiler do so in such situations. (While a future RFC may change this
@@ -92,7 +101,10 @@ per the above requirements, and any such change would be a significant breaking 
 # Drawbacks
 [drawbacks]: #drawbacks
 
-* This is a breaking change because the `since` field of `#[deprecated]` is now required.
+* Breaking changes: the `since` field of `#[deprecated]` is now required, and the compiler now
+  ensures that its value is semver-compliant. Stable crates must also mark all
+  publically-visible items with one of the stability attributes, or risk being broken by a
+  future version of Rust.
 * Once this feature is public, its design is forever set in stone.
 
 # Alternatives
