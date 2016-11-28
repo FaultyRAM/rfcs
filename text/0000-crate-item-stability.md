@@ -101,5 +101,5 @@ per the above requirements, and any such change would be a significant breaking 
 
 * Rust uses its own stability attributes internally. What will happen to these?
 
-[RFC 1270]: text/1270-deprecation.md
+[RFC 1270]: 1270-deprecation.md
 [crates-io]: https://crates.io
