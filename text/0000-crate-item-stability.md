@@ -29,11 +29,20 @@ based on a number of factors. The attributes and rules that govern stability are
 ## Stability Attributes
 [stability-attributes]: #stability-attributes
 
-A publically-visible item can be marked with one of the *stability attributes*: `#[unstable]`,
-`#[stable]` or `#[reserved]`. Additionally, [`#[deprecated]`][RFC 1270] shall henceforth be
-recognised as a stability attribute. It is an error for an item to be marked with more than one
-stability attribute. `#[unstable]`, `#[stable]` and `#[reserved]` each have the following fields,
-all of which are optional:
+A publically-visible item can be marked with one of the *stability attributes*, listed below.
+
+* An `#[unstable]` item is unstable, and may change in future versions of the crate to which the
+  item belongs.
+* A `#[stable]` item is stable, and not expected to change before the next major version of the
+  crate to which the item belongs.
+* A `#[reserved]` item is unstable, and reserved for future usage. Unlike the other stability
+  attributes, `#[reserved]` is only valid on struct members, constants, and static variables.
+* Additionally, [`#[deprecated]`][RFC 1270] shall henceforth be recognised as a stability
+  attribute. A `#[deprecated]` item is unstable, and expected to be removed in a future version
+  of the crate to which the item belongs.
+
+It is an error for an item to be marked with more than one stability attribute. `#[unstable]`,
+`#[stable]` and `#[reserved]` each have the following fields, all of which are optional:
 
 * `since` is a semver-compliant version number, representing the version of the crate at the time
   the item was marked with the given attribute.
